@@ -7,6 +7,7 @@ const dishes = require(path.resolve("src/data/dishes-data"));
 const nextId = require("../utils/nextId");
 const e = require("express");
 
+//validate property is not missing and not empty
 function validateProperty(propertyName){
     return function (req, res, next){
         const {data = {}} = req.body
@@ -21,6 +22,7 @@ function validateProperty(propertyName){
     }
 }
 
+//validate price is not missing and integer and greater than 0
 function validatePrice(req, res, next){
     const price = req.body.data.price
     if (price && Number(price) > 0 && typeof (price) == "number"){
@@ -33,6 +35,7 @@ function validatePrice(req, res, next){
     }
 }
 
+//validate Id in request Body matches with the URL
 function validateIdMatch(req, res, next){
     const idInBody = req.body.data.id
     const {dishId} = req.params
@@ -49,6 +52,7 @@ function validateIdMatch(req, res, next){
     }
 }
 
+//validate Id in the URL exists
 function validateDishExists(req, res, next){
     const {dishId} = req.params;
     const dishFound = dishes.find((dish) => dish.id === dishId);
@@ -62,19 +66,14 @@ function validateDishExists(req, res, next){
             message: `dish with Id: ${dishId} not found.`
         })
     }
-
 }
+
 function create(req, res, next){
-    const {data: {name, description, price, image_url}} = req.body
-    const newDish = {
-        id: nextId(),
-        name: name,
-        description: description,
-        price: price,
-        image_url: image_url
-    }
-    dishes.push(newDish);
-    res.status(201).json({data: newDish})
+    const {data} = req.body
+    data['id'] = nextId();
+
+    dishes.push(data);
+    res.status(201).json({data: data})
 }
 
 function list(req, res, next){
@@ -86,13 +85,10 @@ function read(req, res, next){
 }
 
 function update(req, res, next){
-    const dishFound = res.locals.dish;
-    const {data: {name, description, price, image_url}} = req.body
-
-    dishFound['name'] = name
-    dishFound['description'] = description
-    dishFound['price'] = price
-    dishFound['image_url'] = image_url
+    let dishFound = res.locals.dish;
+    const {data} = req.body;
+    data['id'] = dishFound.id;
+    dishFound = data
 
     res.json({data: dishFound})
 }
